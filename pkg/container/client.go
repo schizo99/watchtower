@@ -39,9 +39,9 @@ type Client interface {
 // NewClient returns a new Client instance which can be used to interact with
 // the Docker API.
 // The client reads its configuration from the following environment variables:
-//  * DOCKER_HOST			the docker-engine host to send api requests to
-//  * DOCKER_TLS_VERIFY		whether to verify tls certificates
-//  * DOCKER_API_VERSION	the minimum docker api version to work with
+//   - DOCKER_HOST			the docker-engine host to send api requests to
+//   - DOCKER_TLS_VERIFY		whether to verify tls certificates
+//   - DOCKER_API_VERSION	the minimum docker api version to work with
 func NewClient(opts ClientOptions) Client {
 	cli, err := sdkClient.NewClientWithOpts(sdkClient.FromEnv)
 
@@ -155,6 +155,15 @@ func (client dockerClient) GetContainer(containerID t.ContainerID) (Container, e
 	containerInfo, err := client.api.ContainerInspect(bg, string(containerID))
 	if err != nil {
 		return Container{}, err
+	}
+
+	currentNetworkContainer := strings.Split(string(containerInfo.HostConfig.NetworkMode), ":")[1]
+	if currentNetworkContainer != "" {
+		nextNetworkContainer, err := client.api.ContainerInspect(bg, currentNetworkContainer)
+		if err != nil {
+			log.Debug("Unable to fetch nextNetworkContainer name")
+		}
+		containerInfo.HostConfig.NetworkMode = container.NetworkMode(fmt.Sprintf("container:%s", nextNetworkContainer.Name))
 	}
 
 	imageInfo, _, err := client.api.ImageInspectWithRaw(bg, containerInfo.Image)
