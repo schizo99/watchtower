@@ -157,9 +157,9 @@ func (client dockerClient) GetContainer(containerID t.ContainerID) (Container, e
 		return Container{}, err
 	}
 
-	currentNetworkContainer := strings.Split(string(containerInfo.HostConfig.NetworkMode), ":")[1]
-	if currentNetworkContainer != "" {
-		nextNetworkContainer, err := client.api.ContainerInspect(bg, currentNetworkContainer)
+	currentNetworkContainer := strings.Split(string(containerInfo.HostConfig.NetworkMode), ":")
+	if len(currentNetworkContainer) == 2 {
+		nextNetworkContainer, err := client.api.ContainerInspect(bg, currentNetworkContainer[1])
 		if err != nil {
 			log.Debug("Unable to fetch nextNetworkContainer name")
 		}
