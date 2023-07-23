@@ -162,8 +162,9 @@ func (client dockerClient) GetContainer(containerID t.ContainerID) (Container, e
 		nextNetworkContainer, err := client.api.ContainerInspect(bg, currentNetworkContainer[1])
 		if err != nil {
 			log.Debug("Unable to fetch nextNetworkContainer name")
+		} else {
+			containerInfo.HostConfig.NetworkMode = container.NetworkMode(fmt.Sprintf("container:%s", nextNetworkContainer.Name))
 		}
-		containerInfo.HostConfig.NetworkMode = container.NetworkMode(fmt.Sprintf("container:%s", nextNetworkContainer.Name))
 	}
 
 	imageInfo, _, err := client.api.ImageInspectWithRaw(bg, containerInfo.Image)
